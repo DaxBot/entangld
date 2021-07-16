@@ -761,6 +761,13 @@ class Entangld extends EventEmitter {
         } else if (msg.type == "subscribe") {
             // Incoming remote subscription request
 
+            // Check for circular references (subscriptions already existing)
+            let prev = this._subscriptions.find(s => s.matches_message(msg) )
+            if ( prev !== undefined ) {
+                // this.unsubscribe(msg.uuid);
+                throw new EntangldError(`Subscription path is circular: Already subscribed on ${prev.path}`);
+            }
+
             // Create a new subscription that simply transmits when triggered
             //  the "tree" from the subscribe message is scoped to be a "path"
             //  here in this datastore

@@ -12,6 +12,7 @@ describe("Subscription", function() {
         s.attach("path1.A",a);
         s.attach("path2.B",b);
         a.attach("path3.B",b);
+        b.attach("path4.A",a);
 
         s.transmit((msg, store)=>store.receive(msg, s));
         a.transmit((msg, store)=>store.receive(msg, a));
@@ -22,6 +23,16 @@ describe("Subscription", function() {
         delete s;
         delete a;
         delete b;
+    });
+
+    it("Circular subscriptions throw an error", function(done) {
+        try {
+            s.subscribe('path1.A.path3.B.path4.A.data', () => {});
+        } catch(e) {
+           assert.strictEqual(e.message,"Subscription path is circular: Already subscribed on path3.B.path4.A.data");
+           done();
+        }
+        assert.fail("Circular subscription should not have passed try block")
     });
 
     it("Should only trigger subscriptions on an exact match", function(done) {
